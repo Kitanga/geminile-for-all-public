@@ -1,0 +1,29 @@
+{
+  "name": "geminile-for-all",
+  "version": "0.1.0",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "bun run --watch src/index.ts",
+    "start": "bun run src/index.ts",
+    "serve": "npx serve ./public/index.html -C -p 3400"
+  },
+  "dependencies": {
+    "@elysiajs/cors": "^1.0.2",
+    "@google/generative-ai": "^0.11.3",
+    "elysia": "latest",
+    "emoji-strip": "^1.0.1",
+    "lodash": "^4.17.21",
+    "markdown-to-txt": "^2.0.1",
+    "validator": "^13.11.0"
+  },
+  "devDependencies": {
+    "@types/emoji-strip": "^1.0.2",
+    "@types/node": "^20.12.7",
+    "@types/validator": "^13.11.9",
+    "bun-types": "latest"
+  },
+  "module": "src/index.js",
+  "bun-create": {
+    "start": "bun run src/index.ts"
+  }
+}

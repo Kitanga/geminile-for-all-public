@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geminile For All</title>
+    <meta name="author" content="Kitanga Nday">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-color: #121B22;
+            --primary-color: #21C063;
+            --secondary-color: #10362985;
+            --record-color: #FA465C;
+            --input-text: #DCDCDC;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: white;
+            font-family: "Inter", sans-serif;
+            font-optical-sizing: auto;
+            font-weight: 400;
+            font-style: normal;
+            font-variation-settings: "slnt" 0;
+        }
+
+        #wrapper {
+            width: 100%;
+            height: 100%;
+            margin: 0 auto;
+            max-width: 768px;
+            padding: 0 16px 16px 16px;
+
+            display: grid;
+            grid-template-columns: 1fr;
+            grid-template-rows: auto 1fr auto;
+            gap: 8px;
+        }
+
+        .cell {
+            min-width: 0;
+            min-height: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        #response-container {
+            overflow: hidden;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        #response-container::-webkit-scrollbar {
+            display: none;
+            scroll-behavior: smooth;
+        }
+
+        /* Response styles */
+        .response {
+            width: 100%;
+            display: grid;
+            grid-template-rows: 1fr auto;
+            gap: 4px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+
+        .message {
+            max-width: 77%;
+            padding: 14px 16px;
+            border-radius: 16px;
+            background-color: var(--secondary-color);
+        }
+
+        .response.user {
+            text-align: right;
+            margin: 0;
+        }
+
+        .user .icon-container {
+            margin-bottom: 4px;
+        }
+
+        .response a,
+        .response a:active,
+        .response a:hover,
+        .response a:visited {
+            color: inherit;
+        }
+
+        .response h2 {
+            font-size: 14px;
+            font-weight: 700;
+            margin: 0;
+            /* margin-bottom: 14px; */
+        }
+
+        .response h3 {
+            font-size: 14px;
+            font-weight: 400;
+            margin: 0;
+            /* margin-bottom: 14px; */
+        }
+
+        .response img {
+            width: 100%;
+            height: auto;
+            border-radius: 12px;
+        }
+
+        #input-field {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        input {
+            border: none;
+            background-color: var(--secondary-color);
+            border-radius: 50px;
+            color: var(--input-text);
+            padding: 10px 20px;
+        }
+
+        input:focus,
+        input {
+            outline: none;
+        }
+
+        input::placeholder {
+            font-style: italic;
+        }
+
+        #send {
+            aspect-ratio: 1 / 1;
+            height: 90px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            cursor: pointer;
+        }
+
+        #send.record {
+            background-color: var(--record-color);
+        }
+
+        .recording-icon {
+            width: 17px;
+            height: 17px;
+            background-color: white;
+            display: none;
+        }
+
+        .record .recording-icon {
+            display: block;
+        }
+
+        .record #record-icon {
+            display: none;
+        }
+
+        body.image #image-upload {
+            display: grid;
+        }
+
+        body.image #input-field {
+            visibility: hidden;
+        }
+
+        #image-upload #display {
+            width: 100%;
+            height: 100%;
+            min-width: 0;
+            min-height: 0;
+        }
+
+        #image-upload #display video {
+            width: 100%;
+            height: auto;
+            border-radius: 12px;
+        }
+
+        #preloader {
+            background-color: white;
+            width: 100%;
+            height: 100%;
+            left: 0;
+            top: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            cursor: pointer;
+            z-index: 10000;
+        }
+
+        #start {
+            padding: 4px 12px;
+            background-color: #141414;
+            color: #f0f0f0;
+            border-radius: 50px;
+        }
+
+        footer {
+            position: fixed;
+            left: 0;
+            bottom: 10px;
+
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 0;
+        }
+
+        footer a,
+        footer a:active,
+        footer a:visited,
+        footer a:hover {
+            color: white;
+        }
+
+        @media only screen and (max-width: 768px) {
+            #image-upload #display {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            #image-upload #display video {
+                width: auto;
+                height: 100%;
+            }
+        }
+    </style>
+
+    <script type="text/javascript">
+        const url = new URLSearchParams(location.search);
+
+        const disableClarity = url.has('disable-clarity');
+
+        if (!disableClarity && !location.href.includes('localhost')) {
+            (function (c, l, a, r, i, t, y) {
+                c[a] = c[a] || function () { (c[a].q = c[a].q || []).push(arguments) };
+                t = l.createElement(r); t.async = 1; t.src = "https://www.clarity.ms/tag/" + i;
+                y = l.getElementsByTagName(r)[0]; y.parentNode.insertBefore(t, y);
+            })(window, document, "clarity", "script", "mep8xe0tfa");
+        }
+    </script>
+</head>
+
+<body class="loading">
+    <div id="wrapper">
+        <footer>Project by <a href="https://kitanga.dev" target="_blank">Kitanga Nday</a></footer>
+        <!-- <div id="preloader">
+            <div id="start">Enter</div>
+        </div> -->
+        <header style="text-align: center">
+            <h1>Geminile For All</h1>
+
+            <h3>Conversational Gemini</h3>
+        </header>
+        <!-- Place responses here -->
+        <div class="cell" id="response-container" style="display: none;">
+            <div class="response bot">
+                <!--  -->
+            </div>
+        </div>
+
+        <div class="cell" id="input-field">
+            <!-- <input tabindex="0" autofocus type="text" name="prompt" id="prompt" placeholder="Search for a recipe here..." /> -->
+            <div id="send">
+                <svg id="record-icon" width="15" height="19" viewBox="0 0 15 19" fill="none"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <g clip-path="url(#clip0_2945_4005)">
+                        <path
+                            d="M7.6926 11.747C9.21714 11.747 10.4477 10.5163 10.4477 8.99188V3.48167C10.4477 1.95717 9.21714 0.726562 7.6926 0.726562C6.16807 0.726562 4.9375 1.95717 4.9375 3.48167V8.99188C4.9375 10.5163 6.16807 11.747 7.6926 11.747Z"
+                            fill="#121B22" />
+                        <path
+                            d="M12.5616 8.99219H14.1228C14.1228 12.1238 11.6248 14.7136 8.61252 15.1636V18.1758H6.77588V15.1636C3.76359 14.7136 1.26562 12.1238 1.26562 8.99219H2.82685C2.82685 11.7473 5.15951 13.6758 7.6942 13.6758C10.2289 13.6758 12.5616 11.7473 12.5616 8.99219Z"
+                            fill="#121B22" />
+                    </g>
+                    <defs>
+                        <clipPath id="clip0_2945_4005">
+                            <rect width="13.2857" height="18" fill="white" transform="translate(0.859375 0.5)" />
+                        </clipPath>
+                    </defs>
+                </svg>
+                <div class="recording-icon"></div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics.js";
+        // TODO: Add SDKs for Firebase products that you want to use
+        // https://firebase.google.com/docs/web/setup#available-libraries
+
+        // Your web app's Firebase configuration
+        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+        const firebaseConfig = {
+            apiKey: "AIzaSyDyavb4QadVPnXEEd_ecUsNrAndHj2cPvs",
+            authDomain: "geminile-for-all.firebaseapp.com",
+            projectId: "geminile-for-all",
+            storageBucket: "geminile-for-all.appspot.com",
+            messagingSenderId: "700426235381",
+            appId: "1:700426235381:web:b4cda97da241b7b8e704bc",
+            measurementId: "G-ZCN7064K0V"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+    <script type="module">
+        // const preloader = document.getElementById('preloader');
+
+        // preloader.style.display = 'none';
+
+        const TIME_CHECK = 1400;
+
+        const IS_MOBILE_DEVICE = is_mobile();
+
+        let BASE_URL = 'https://geminile-for-all.onrender.com';
+
+        if (location.host === 'localhost:3400') {
+            BASE_URL = 'http://localhost:3000';
+        }
+
+        // Get the chat id
+
+        let CHAT_ID = '';
+
+        await get_chat();
+
+        console.log('chat id:', CHAT_ID);
+
+        const response_container = document.getElementById('response-container');
+
+        let can_record = true;
+        let is_speaking = false;
+        let last_listened = 0;
+
+        const SpeechRecognition =
+            window.SpeechRecognition || window.webkitSpeechRecognition;
+        const SpeechGrammarList =
+            window.SpeechGrammarList || window.webkitSpeechGrammarList;
+        const SpeechRecognitionEvent =
+            window.SpeechRecognitionEvent || window.webkitSpeechRecognitionEvent;
+
+        const synth = window.speechSynthesis;
+
+        window.onbeforeunload = function (event) {
+            if (!!synth.cancel) {
+                synth.cancel();
+            }
+        };
+
+        const speechRecognitionList = new SpeechGrammarList();
+        const recognition = new SpeechRecognition();
+        recognition.maxAlternatives = 4;
+        recognition.grammars = speechRecognitionList;
+        recognition.interimResults = true;
+        recognition.continuous = true;
+        // recognition.maxAlternatives = 1;
+
+        let results = [];
+
+        // TODO: revert back to previous setup for speaking, interrupting isn't working as intended.
+        // TODO: introduce a system that checks if the message before the current message was resolved (app is in a READY state rather than a WAITING_FOR_REPLY state), then the message is sent
+        // ...Otherwise, send the previous message and the next couple of messages to the server with a `migrate` flag and `last_msg_id` uid so that the app knows which model responses to remove and which user message to replace.
+
+        // TODO: make sure that the model knows that you've already setup the TTS to speak to the user and that the user is speaking to it via voice to speech.
+
+        recognition.onaudiostart = (ev) => {
+            // console.log('Audio started:', ev);
+        };
+        recognition.onaudioend = (ev) => {
+            console.log('Audio ended');
+            if (is_speaking) {
+                // recognition.stop();
+                setTimeout(() => {
+                    recognition.start();
+                }, 700)
+            }
+        };
+        recognition.onspeechstart = (ev) => {
+            // console.log('Speech started');
+        };
+        recognition.onspeechend = (ev) => {
+            console.log('Speech ended');
+        };
+        recognition.onsoundstart = (ev) => {
+            // console.log('Sound has been heard');
+        };
+        recognition.onsoundend = (ev) => {
+            console.log('Sound has stopped being heard:');
+        };
+        recognition.onerror = (event) => {
+            console.log('err:', event.error);
+        };
+
+        recognition.onresult = ev => {
+            // console.log('results:', ev.results)
+
+            const result = ev.results?.[ev.results?.length - 1];
+            const alternative = result?.[0];
+            const msg = alternative?.transcript;
+
+            if (msg.trim()) {
+                last_listened = performance.now();
+                synth.cancel();
+            }
+
+            console.log('alts:', result);
+
+            if (result?.isFinal) {
+                console.log('message:', msg);
+
+                if (msg) {
+                    if (IS_MOBILE_DEVICE) {
+                        results = [msg];
+                    } else {
+                        results.push(msg);
+                    }
+                    create_prompt_later()
+                }
+            }
+        };
+
+        send.onclick = _ => {
+            // if (can_record) {
+            if (!is_speaking) {
+                console.log('Recording starting');
+                is_speaking = true;
+                recognition.start();
+                send.classList.add('record');
+            } else {
+                console.log('Recording stopping');
+                is_speaking = false;
+                recognition.stop();
+                send.classList.remove('record');
+            }
+            // }
+        };
+
+        function create_prompt_later() {
+            setTimeout(() => {
+                if (performance.now() - last_listened >= TIME_CHECK) {
+                    create_prompt()
+                }
+            }, TIME_CHECK);
+        }
+
+        function create_prompt() {
+            const msg = results.join(' ');
+
+            if (msg.trim()) {
+                const payload = {
+                    msg
+                };
+
+                results = []
+
+                add_user_prompt_msg(payload);
+
+                send_prompt(payload);
+            }
+        }
+
+        /** @param {Blob} blob */
+        function getBase64String(blob) {
+            console.log('Blob - ', blob);
+
+            return new Promise((res, rej) => {
+                let reader = new FileReader();
+                reader.readAsDataURL(blob);
+                reader.onloadend = function () {
+                    const base64String = reader.result;
+                    console.log('Base64 String - ', base64String);
+
+                    const str = base64String.substr(base64String.indexOf(',') + 1).trim();
+
+                    // Simply Print the Base64 Encoded String, 
+                    // without additional data: Attributes. 
+                    console.log('Base64 String without Tags- ', str);
+
+                    res({
+                        base64: base64String,
+                        str,
+                        type: blob.type
+                    });
+                }
+            });
+        }
+
+        /**
+         * 
+         * @param {{ msg: string }} payload A payload to send to server
+         * 
+         */
+        function send_prompt(payload) {
+
+            console.log('BASEURL:', BASE_URL);
+            console.log('Payload:', payload)
+
+            return axios.post(`${BASE_URL}/prompt`, {
+                ...payload,
+                chat_id: CHAT_ID,
+            })
+                // .then(resp => {
+                //     console.log(resp.data.text);
+
+                //     return response;
+                // })
+                .then(
+                    /** @param json {Recipe} Response from server with recipe info
+                     */
+                    async resp => {
+                        console.log('response:', resp);
+
+                        const {
+                            text,
+                            error,
+                        } = resp.data;
+
+                        if (error && text === 'Chat session dead') {
+                            // Chat is dead, get a new one
+                            await get_chat();
+                        }
+
+                        const uuid = crypto.randomUUID() || Date.now();
+
+                        if (error) {
+                            response_container.innerHTML += `
+                <div class="response" id="${uuid}">
+                    <div class="icon-container bot">
+                        Geminile
+                    </div>
+
+                    <div class="message">
+                        ${text}<br />
+
+                        Please try again.
+                    </div>
+                </div>`;
+
+                            show_latest_message(uuid, text);
+
+                            return;
+                        }
+
+                        response_container.innerHTML += `
+                <div class="response" id="${uuid}">
+                    <div class="icon-container bot">
+                        Geminile
+                    </div>
+                    <div class="message bot">
+                        ${text}
+                    </div>
+                </div>
+            `;
+
+                        show_latest_message(uuid, text)
+                    });
+
+        }
+
+        function get_chat() {
+            return axios.get(`${BASE_URL}/chat`)
+                .then(resp => {
+                    CHAT_ID = resp.data?.chat_id;
+                });
+        }
+
+        function show_latest_message(uuid, text) {
+            setTimeout(() => {
+                document.getElementById(uuid.toString()).scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start',
+                });
+            }, 520);
+
+            if (text) {
+                speak(text);
+            }
+
+            // prompt_input.placeholder = 'Search for a recipe here...';
+            // prompt_input.disabled = false;
+
+            // prompt_input.focus();
+        }
+
+        function speak(text) {
+            const utterThis = new SpeechSynthesisUtterance(text);
+            // currentSpeaker = utterThis;
+            // console.log('voices:', voices);
+
+            const voices = speechSynthesis.getVoices();
+
+            let main_voice = null;
+
+            let default_voice = null;
+            let first_english_voice = null;
+            let pref_voice_found = false;
+
+            console.log('voices:', voices);
+
+            for (let ix = 0; ix < voices.length; ix++) {
+                const cur_voice = voices[ix];
+
+                if (!pref_voice_found) {
+                    if (cur_voice.name.toLowerCase().includes('microsoft ezinne online')) {
+                        pref_voice_found = true;
+                        main_voice = cur_voice;
+
+                        console.log('found ezinne');
+                        break;
+                    }
+                    if (cur_voice.name.toLowerCase().includes('google us english')) {
+                        pref_voice_found = true;
+                        main_voice = cur_voice;
+
+                        console.log('found google us english');
+                        break;
+                    }
+
+                    if (cur_voice.default) {
+                        default_voice = cur_voice;
+                    }
+
+                    if (cur_voice.lang.includes('en-')) {
+                        main_voice = cur_voice;
+
+                        if (!first_english_voice) {
+                            first_english_voice = cur_voice;
+                        }
+                    } else if (ix >= voices.length - 1) {
+                        main_voice = default_voice;
+                    }
+                }
+            }
+
+            if (!main_voice) {
+                main_voice = first_english_voice;
+            }
+
+            console.log('main voice:', main_voice);
+
+            console.log(utterThis);
+
+            utterThis.voice = main_voice;
+            utterThis.volume = 1;
+            utterThis.pitch = 1;
+            utterThis.rate = 1;
+            utterThis.onstart = function () {
+                console.log("Started talking!");
+            };
+
+            utterThis.onpause = function (event) {
+                const char = event.utterance.text.charAt(event.charIndex);
+                console.log(
+                    "Speech paused at character " +
+                    event.charIndex +
+                    ' of "' +
+                    event.utterance.text +
+                    '", which is "' +
+                    char +
+                    '".'
+                );
+            };
+            utterThis.onerror = function (err) {
+                if (err.error != 'interrupted') {
+                    onError(err);
+                }
+            };
+            utterThis.onend = function () {
+                //restartRecognition();
+            };
+
+            // Now start talking
+            synth.speak(utterThis);
+
+            let r = setInterval(() => {
+                console.log(speechSynthesis.speaking);
+                if (!speechSynthesis.speaking) {
+                    clearInterval(r);
+                } else {
+                    speechSynthesis.resume();
+                }
+            }, 15100);
+
+            console.log(synth);
+        }
+
+        function add_user_prompt_msg({ msg, img_str }) {
+            const uuid = crypto.randomUUID() || Date.now();
+
+            response_container.innerHTML += `
+        <div class="response user" id="${uuid}">
+            <div class="icon-container">
+                <span class="icon user">
+                    You
+                </span>
+            </div>
+
+            ${msg}
+            
+            ${img_str ? `<div class="img"><img src="${img_str}" alt="Hopefully some ingredients we can cook with" /></div>` : ``}
+        </div>
+    `;
+
+            setTimeout(() => {
+                document.getElementById(uuid.toString()).scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start',
+                });
+            }, 520);
+        }
+
+        function is_mobile() {
+            if (navigator.userAgent.match(/Android/i)
+                || navigator.userAgent.match(/webOS/i)
+                || navigator.userAgent.match(/iPhone/i)
+                || navigator.userAgent.match(/iPad/i)
+                || navigator.userAgent.match(/iPod/i)
+                || navigator.userAgent.match(/BlackBerry/i)
+                || navigator.userAgent.match(/Windows Phone/i)) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+
+    </script>
+</body>
+
+</html>
